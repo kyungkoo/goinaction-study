@@ -1,5 +1,12 @@
 package search
 
+import (
+	"encoding/json"
+	"os"
+)
+
+const dataFile = "data/data.json"
+
 // Feed 를 처리할 정보를 표현하는 구조체
 type Feed struct {
 	Name string `json:"site"`
@@ -9,5 +16,16 @@ type Feed struct {
 
 // RetrieveFeeds 함수는 피드 데이터 파일을 읽어 구조체로 변환한다.
 func RetrieveFeeds() ([]*Feed, error) {
-	return nil, nil
+	file, err := os.Open(dataFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// defer 함수를 이용해 이 함수가 리턴될 때 앞서 열어둔 파일이 닫히도록 한다.
+	defer file.Close()
+
+	var feeds []*Feed
+	err = json.NewDecoder(file).Decode(&feeds)
+
+	return feeds, err
 }

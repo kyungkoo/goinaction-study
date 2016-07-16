@@ -1,5 +1,7 @@
 package search
 
+import "log"
+
 // Result 구조체는 검색 결과를 저장한다.
 type Result struct {
 	Field   string
@@ -13,15 +15,23 @@ type Matcher interface {
 
 // Match 함수는 고루틴으로서 호출되며 개별 피드 타입에 대한 검색을 동시에 수행한다.
 func Match(matcher Matcher, feed *Feed, searchTerm string, results chan<- *Result) {
+	// 지정된 검색기를 이용해 검색을 수행한다.
+	searchResults, err := matcher.Search(feed, searchTerm)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
+	// 검색 결과를 채널에 기록한다.
+	for _, result := range searchResults {
+		results <- result
+	}
 }
 
 // Display 함수는 개별 고루틴이 전달한 검색 결과를 콘솔 창에 출력한다.
 func Display(results chan *Result) {
-
-}
-
-// Register 는 프로그램에서 사용할 검색기를 등록할 함수를 정의한다.
-func Register(feedType string, matcher Matcher) {
-
+	// 채널은 검색 결과가 기록될 때까지 접근이 차단도니다. 채널이 닫히면 for 루프가 종료된다.
+	for result := range results {
+		log.Printf("%s\n%s\n\n", result.Field, result.Content)
+	}
 }
